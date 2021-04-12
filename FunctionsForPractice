@@ -1,0 +1,50 @@
+package com.practice.java8;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+
+public class FunctionsForPractice {
+    private static Object Integer;
+
+    public static void main(String[] args) {
+
+        AverageFunction();
+        Boolean returnedBoolean=IsPalindrome("Madam");  // java 7  code to check if string is palindrome
+
+        System.Out.println("returnedBoolean is "+returnedBoolean);
+
+    }
+
+    public static Long AverageFunction() {
+
+        // calculating Average .....
+        List<Integer> list10= Arrays.asList(1,3,4,5);
+
+        Integer average = list10.stream().reduce(new Function<List<Integer> list, Integer > () {
+
+            @Override
+            public Integer apply (List < Integer > integers) {
+                return 0;
+            }
+            public Integer findAverage (List < Integer > list) {
+                long count1 = list.stream().count();
+                long sum = list.stream().reduce((i, j) -> i.compareTo(j)).get();
+                return sum / count1;
+            }
+        }
+
+        );
+
+    }
+
+
+    public static boolean IsPalindrome (String str1){
+
+        for (int i=0;i <=)
+
+
+    }
+
+
+}
