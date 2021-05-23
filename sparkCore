@@ -46,7 +46,7 @@ hi how r u?
  * command :
  * spark-submit --class sparkWordCount.WordCounter --master local /home/cloudera/Desktop/sparkWordCount.jar /user/spark/sparkWordcount/hello.txt /user/spark/sparkWordcount/sparkoutput
 
- * 
+ * Finally, we run reduce, which is an action. At this point Spark breaks the computation into tasks to run on separate machines, and each machine runs both its part of the map and a local reduction, returning only its answer to the driver program.
  */
 
 
