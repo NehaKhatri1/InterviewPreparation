@@ -1,0 +1,86 @@
+
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+
+/**
+ *
+Input :-- [{"name": "neha","age": "30"},{"name": "vivek", "age": "33"},{"name": "rekha", "age": "55"},{"name": "aryan", "age": "16"},{"name": "kulbhushan", "age": "62"},{"name": "kanta", "age": "30"}]
+
+
+output :--
+
+ +---+----------+
+ |age|      name|
+ +---+----------+
+ | 30|      neha|
+ | 33|     vivek|
+ | 55|     rekha|
+ | 16|     aryan|
+ | 62|kulbhushan|
+ | 30|     kanta|
+ +---+----------+
+
+ root
+ |-- age: string (nullable = true)
+ |-- name: string (nullable = true)
+
+
+ +-----+
+ | name|
+ +-----+
+ | neha|
+ |kanta|
+ +-----+
+
+ */
+
+
+
+public class sparkSqlExample {
+    public static void main(String[] args) {
+    /*SparkSession spark = SparkSession
+            .builder()
+            .appName("Java Spark SQL basic example")
+            .config("spark.master", "local")
+            .getOrCreate();
+*/
+        SparkSession spark = SparkSession.builder().appName("Java Spark SQL basic example")
+                .master("local[*]").config("spark.driver.memory", "5g")
+                .config("spark.driver.host", "127.0.0.1") // #Machine ip  (localhost worked for me)
+                .config("spark.driver.bindAddress", "127.0.0.1") // #Machine ip (localhost worked for me )
+                .getOrCreate();
+
+
+        //  Dataset<Row> df = spark.read().json("examples/src/main/resources/people.json");
+        Dataset<Row> df = spark.read().json("/home/osboxes/IntellijProjects/sparkSqlExample/src/resources/people.json");
+
+        // Displays the content of the DataFrame to stdout
+         df.show();
+         df.printSchema();
+        // Register the DataFrame as a SQL temporary view
+          df.createOrReplaceTempView("people");
+
+         Dataset<Row> sqlDF = spark.sql("SELECT name FROM people where age=30");
+         sqlDF.show();
+
+
+     /*   +---+----------+
+                |age|      name|
+                +---+----------+
+                | 30|      neha|
+                | 33|     vivek|
+                | 55|     rekha|
+                | 16|     aryan|
+                | 62|kulbhushan|
+                +---+----------+
+        */
+
+        spark.stop();
+    }
+
+}
+
+
+
+
