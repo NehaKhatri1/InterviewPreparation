@@ -1,0 +1,118 @@
+
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.api.java.UDF1;
+import org.apache.spark.sql.streaming.OutputMode;
+import org.apache.spark.sql.streaming.StreamingQuery;
+import org.apache.spark.sql.streaming.StreamingQueryException;
+import org.apache.spark.sql.types.DataTypes;
+
+import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.sql.*;
+import org.apache.spark.sql.streaming.StreamingQuery;
+
+
+/*
+ Input :-   run kafka producer  on terminal 
+ 
+  >fekjwehthrethrej
+>fdgklfklg
+>hgfksjkhfdfkg
+>
+
+
+output :-- on console 
+
+root
+ |-- key: binary (nullable = true)
+ |-- value: binary (nullable = true)
+ |-- topic: string (nullable = true)
+ |-- partition: integer (nullable = true)
+ |-- offset: long (nullable = true)
+ |-- timestamp: timestamp (nullable = true)
+ |-- timestampType: integer (nullable = true)
+
+
+
+-------------------------------------------
+Batch: 0
+-------------------------------------------
+
++----+-------------+-----+---------+------+--------------------+-------------+
+| key|        value|topic|partition|offset|           timestamp|timestampType|
++----+-------------+-----+---------+------+--------------------+-------------+
+|null|[67 6B 6B 68]|test1|        0|   137|2021-06-07 19:03:...|            0|
++----+-------------+-----+---------+------+--------------------+-------------+
+
+-------------------------------------------
+Batch: 1
+-------------------------------------------
+
++----+-------------+-----+---------+------+--------------------+-------------+
+| key|        value|topic|partition|offset|           timestamp|timestampType|
++----+-------------+-----+---------+------+--------------------+-------------+
+|null|[67 6B 6B 68]|test1|        0|   137|2021-06-07 19:03:...|            0|
++----+-------------+-----+---------+------+--------------------+-------------+
+
+''''''
+
+
+
+-------------------------------------------
+Batch: 3
+-------------------------------------------
+
++----+-------------+-----+---------+------+--------------------+-------------+
+| key|        value|topic|partition|offset|           timestamp|timestampType|
++----+-------------+-----+---------+------+--------------------+-------------+
+|null|[67 6B 6B 68]|test1|        0|   137|2021-06-07 19:03:...|            0|
++----+-------------+-----+---------+------+--------------------+-------------+
+
+**/
+
+
+public class WriteToElasticSearch {
+
+
+    public static void main(String[] args) throws StreamingQueryException {
+
+
+        //set the hadoop home directory for kafka source
+
+
+        //  System.setProperty("hadoop.home.dir", "d:/winutils");
+
+
+        SparkSession session = SparkSession.builder()
+                .master("local[*]").appName("structuredViewingReport").config("spark.driver.memory", "5g")
+                .config("spark.driver.host", "127.0.0.1") // #Machine ip  (localhost worked for me)
+                .config("spark.driver.bindAddress", "127.0.0.1") // #Machine ip (localhost worked for me )
+                .getOrCreate();
+
+
+
+        //define kafka streaming reader
+        Dataset<Row> df = session.readStream()
+                .format("kafka")
+                .option("kafka.bootstrap.servers", "localhost:9092")
+                .option("subscribe", "test1")
+                .load();
+
+        df.printSchema();
+        
+        
+        
+         // Start running the query that prints the running counts to the console
+        StreamingQuery query = df.writeStream()
+                .outputMode("append")
+                .format("console")
+                .start();
+
+        query.awaitTermination();
+
+
+    }
+}
+
