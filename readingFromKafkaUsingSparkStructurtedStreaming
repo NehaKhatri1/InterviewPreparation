@@ -70,6 +70,17 @@ Batch: 3
 |null|[67 6B 6B 68]|test1|        0|   137|2021-06-07 19:03:...|            0|
 +----+-------------+-----+---------+------+--------------------+-------------+
 
+
+
+
+RUN:--   run from console only but in case you want to run as spark job it wont print output on logs .
+
+Running ::----
+
+  1.   spark-submit   --class WriteToElasticSearch     --master local[2]   /home/osboxes/DependenciesAndJars/springBootDemoProject/ReadFromKafkaAndWriteToElasticSearchUsingSparkStructuredStreaming/out/artifacts/ReadFromKafkaAndWriteToElasticSearchUsingSparkStructuredStreaming_jar/ReadFromKafkaAndWriteToElasticSearchUsingSparkStructuredStreaming.jar localhost:9092 test1
+
+
+
 **/
 
 
