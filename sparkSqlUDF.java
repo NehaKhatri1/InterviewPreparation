@@ -1,7 +1,10 @@
 
 import org.apache.commons.codec.StringEncoder;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.MapFunction;
+import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.api.java.UDF2;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.api.java.UDF1;
 
@@ -9,7 +12,7 @@ import static org.apache.spark.sql.functions.explode;
 import static org.apache.spark.sql.functions.split;
 
 /**
- * Input :--[{"name": "neha khatri","age": "30"},{"name": "vivek kumar", "age": "33"},{"name": "rekha khatri", "age": "55"},{"name": "aryan khatri", "age": "16"},{"name": "kulbhushan kumar", "age": "62"},{"name": "kanta kaushal", "age": "30"}]
+ * Input :-- [{"name": "neha","age": "30"},{"name": "vivek", "age": "33"},{"name": "rekha", "age": "55"},{"name": "aryan", "age": "16"},{"name": "kulbhushan", "age": "62"},{"name": "kanta", "age": "30"}]
  * <p>
  * <p>
  * output :--
@@ -90,24 +93,19 @@ public class sparkSqlExample {
         // You can extract a column of a dataframe by its name
         Dataset<Row> sqlDF = spark.sql("SELECT current_timestamp(),name FROM people where age=30");
 
-        // The columns of a row in the result can be accessed by field index
+       // The columns of a row in the result can be accessed by field index
         Encoder<String> stringEncoder = Encoders.STRING();
         Dataset<String> teenagerNamesByIndexDF = sqlDF.map(new MapFunction<Row, String>() {
             @Override
             public String call(Row row) throws Exception {
-                return "Name: " + row.getString(1);
+                return "timestamp: " + row.getString(1);
             }
         }, stringEncoder);
+
+
+        System.out.println(" teenagerNamesByIndexDF");
+
         teenagerNamesByIndexDF.show();
-
-
-        System.out.println("sqlDF count is  " + sqlDF.count());
-        sqlDF.show();
-
-
-        //sqlDF.withColumn("name",explode(split($ "name", " "))).show();
-
-
 
 
 
@@ -167,11 +165,10 @@ public class sparkSqlExample {
 
         Dataset<Row> sqlDF10 = spark.sql("SELECT GettingSurname(name) FROM person ");  // call  udf(column) from tempview  ; createtempview from source dataframe & then pass column of dataframe to udf .
         sqlDF10.show();
-        
-     /*&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&*/
 
-        
-         //-------------------------------------------------------------------------------------------------------//
+        /*&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&*/
+
+        //-------------------------------------------------------------------------------------------------------//
       // UDF Example 2 concatinating 2 columns
 
       // notice UDF2 for new udf
@@ -185,22 +182,25 @@ public class sparkSqlExample {
         }, DataTypes.StringType);
 
 
+
+.
         Dataset<Row> sqlDF11 = spark.sql("SELECT ConcatedColumns(name,age) FROM person ");  // call  udf(column) from tempview  ; createtempview from source dataframe & then pass column of dataframe to udf .
         sqlDF11.show();
-        
- /*       +------------------------------+
-|UDF:ConcatedColumns(name, age)|
-+------------------------------+
-|            neha khatri * * 30|
-|            vivek kumar * * 33|
-|           rekha khatri * * 55|
-|           aryan khatri * * 16|
-|          kulbhushan kumar ...|
-|          kanta kaushal * * 30|
-+------------------------------+
-*/
+
         //-------------------------------------------------------------------------------------------------------//
-        
+
+       //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&//
+
+        // We Can only apply map/flatmap like transformation/action to dataframe after converting it to RDD or from one dataframe to anothore datafgrame .
+
+        Dataset<Row> sqlDF12 = spark.sql("SELECT name ,age FROM people");
+
+        JavaRDD<String>  javaRDD=sqlDF12.javaRDD().map(e1->e1.getString(0)+" amd");   // wrong implementation  JavaRDD<String>  javaRDD=sqlDF12.map(e1->e1.getString(0)+" amd");
+            javaRDD.foreach(e->System.out.println(e));
+
+
+        //sqlDF12.map(e->e.length()).
+        //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&//
         spark.stop();
     }
 
