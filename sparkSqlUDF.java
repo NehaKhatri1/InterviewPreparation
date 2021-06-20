@@ -167,7 +167,40 @@ public class sparkSqlExample {
 
         Dataset<Row> sqlDF10 = spark.sql("SELECT GettingSurname(name) FROM person ");  // call  udf(column) from tempview  ; createtempview from source dataframe & then pass column of dataframe to udf .
         sqlDF10.show();
+        
+     /*&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&*/
 
+        
+         //-------------------------------------------------------------------------------------------------------//
+      // UDF Example 2 concatinating 2 columns
+
+      // notice UDF2 for new udf
+        spark.udf().register("ConcatedColumns", new UDF2<String, String,String>() {
+            @Override
+            public String call(String column1, String column2) throws Exception {
+                String concatedStr = column1+" * * "+column2;
+
+                return concatedStr;
+            }
+        }, DataTypes.StringType);
+
+
+        Dataset<Row> sqlDF11 = spark.sql("SELECT ConcatedColumns(name,age) FROM person ");  // call  udf(column) from tempview  ; createtempview from source dataframe & then pass column of dataframe to udf .
+        sqlDF11.show();
+        
+ /*       +------------------------------+
+|UDF:ConcatedColumns(name, age)|
++------------------------------+
+|            neha khatri * * 30|
+|            vivek kumar * * 33|
+|           rekha khatri * * 55|
+|           aryan khatri * * 16|
+|          kulbhushan kumar ...|
+|          kanta kaushal * * 30|
++------------------------------+
+*/
+        //-------------------------------------------------------------------------------------------------------//
+        
         spark.stop();
     }
 
