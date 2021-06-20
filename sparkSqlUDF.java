@@ -9,7 +9,7 @@ import static org.apache.spark.sql.functions.explode;
 import static org.apache.spark.sql.functions.split;
 
 /**
- * Input :-- [{"name": "neha","age": "30"},{"name": "vivek", "age": "33"},{"name": "rekha", "age": "55"},{"name": "aryan", "age": "16"},{"name": "kulbhushan", "age": "62"},{"name": "kanta", "age": "30"}]
+ * Input :--[{"name": "neha khatri","age": "30"},{"name": "vivek kumar", "age": "33"},{"name": "rekha khatri", "age": "55"},{"name": "aryan khatri", "age": "16"},{"name": "kulbhushan kumar", "age": "62"},{"name": "kanta kaushal", "age": "30"}]
  * <p>
  * <p>
  * output :--
