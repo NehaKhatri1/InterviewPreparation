@@ -98,7 +98,7 @@ public class sparkSqlExample {
         Dataset<String> teenagerNamesByIndexDF = sqlDF.map(new MapFunction<Row, String>() {
             @Override
             public String call(Row row) throws Exception {
-                return "timestamp: " + row.getString(1);
+                return "name: " + row.getString(1);
             }
         }, stringEncoder);
 
@@ -141,7 +141,7 @@ public class sparkSqlExample {
         // 2. register dataframe as tempview   --> df.createTempView("employee")
         // 3. To select columns apply dataframe.sql(select col from employee))
         // 4. udf called as nameofUdf(column)  in select statement .
-
+// 5.  The Results of sql queries are dataframes and support all the normal RDD operations .
 
 
         //  Dataset<Row> df = spark.read().json("examples/src/main/resources/people.json");
@@ -183,7 +183,7 @@ public class sparkSqlExample {
 
 
 
-.
+
         Dataset<Row> sqlDF11 = spark.sql("SELECT ConcatedColumns(name,age) FROM person ");  // call  udf(column) from tempview  ; createtempview from source dataframe & then pass column of dataframe to udf .
         sqlDF11.show();
 
@@ -191,14 +191,30 @@ public class sparkSqlExample {
 
        //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&//
 
-        // We Can only apply map/flatmap like transformation/action to dataframe after converting it to RDD or from one dataframe to anothore datafgrame .
+     //   A Dataset is a strongly typed collection of domain-specific objects that can be transformed in parallel using functional or relational operations. Each Dataset also has an untyped view called a DataFrame, which is a Dataset of Row.
+      in short 
+     
+       // Operations available on Datasets are divided into transformations and actions. Transformations are the ones that produce new Datasets, and actions
+        // are the ones that trigger computation and return results. Example transformations include map, filter, select, and aggregate (groupBy).
+        // Example actions count, show, or writing data out to file systems.
+        // We Can apply map/flatmap like transformation/action to dataframe  & even after converting it to RDD or from one dataframe to anothore datafgrame .
+
+        
+       // The Results of sql queries are dataframes and support all the normal RDD operations .
 
         Dataset<Row> sqlDF12 = spark.sql("SELECT name ,age FROM people");
 
         JavaRDD<String>  javaRDD=sqlDF12.javaRDD().map(e1->e1.getString(0)+" amd");   // wrong implementation  JavaRDD<String>  javaRDD=sqlDF12.map(e1->e1.getString(0)+" amd");
             javaRDD.foreach(e->System.out.println(e));
 
+          Dataset<String>  df15=  sqlDF12.map(new MapFunction<Row, String>() {
+                @Override
+                public String call(Row row) throws Exception {
+                    return "Name_abc " +row.getString(1);
+                }
+            },Encoders.STRING());
 
+        df15.show();
         //sqlDF12.map(e->e.length()).
         //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&//
         spark.stop();
