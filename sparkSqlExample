@@ -1,0 +1,226 @@
+
+import org.apache.commons.codec.StringEncoder;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.MapFunction;
+import org.apache.spark.rdd.RDD;
+import org.apache.spark.sql.*;
+import org.apache.spark.sql.api.java.UDF2;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.api.java.UDF1;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.apache.spark.sql.functions.*;
+
+/**
+ * Input :-- [{"name": "neha","age": "30"},{"name": "vivek", "age": "33"},{"name": "rekha", "age": "55"},{"name": "aryan", "age": "16"},{"name": "kulbhushan", "age": "62"},{"name": "kanta", "age": "30"}]
+ * <p>
+ * <p>
+ * output :--
+ * <p>
+ * +---+----------+
+ * |age|      name|
+ * +---+----------+
+ * | 30|      neha|
+ * | 33|     vivek|
+ * | 55|     rekha|
+ * | 16|     aryan|
+ * | 62|kulbhushan|
+ * | 30|     kanta|
+ * +---+----------+
+ * <p>
+ * root
+ * |-- age: string (nullable = true)
+ * |-- name: string (nullable = true)
+ * <p>
+ * <p>
+ * +-----+
+ * | name|
+ * +-----+
+ * | neha|
+ * |kanta|
+ * +-----+
+ */
+
+
+public class sparkSqlExample {
+
+    private static Object StringEncoder;
+
+    public static void main(String[] args) {
+    /*SparkSession spark = SparkSession
+            .builder()
+            .appName("Java Spark SQL basic example")
+            .config("spark.master", "local")
+            .getOrCreate();
+*/
+        SparkSession spark = SparkSession.builder().appName("Java Spark SQL basic example")
+                .master("local[*]").config("spark.driver.memory", "5g")
+                .config("spark.driver.host", "127.0.0.1") // #Machine ip  (localhost worked for me)
+                .config("spark.driver.bindAddress", "127.0.0.1") // #Machine ip (localhost worked for me )
+                .getOrCreate();
+
+        spark.sparkContext().setLogLevel("ERROR");
+
+        //  Dataset<Row> df = spark.read().json("examples/src/main/resources/people.json");
+        Dataset<Row> df = spark.read().json("/home/osboxes/IntellijProjects/sparkSqlExample/src/resources/people.json");
+
+        // Displays the content of the DataFrame to stdout
+        df.show();
+
+
+        // get the count of df
+        System.out.println("total row count in df is ****  " + df.count());  //total row count in df is ****  6
+
+     /*   +---+----------+
+                |age|      name|
+                +---+----------+
+                | 30|      neha|
+                | 33|     vivek|
+                | 55|     rekha|
+                | 16|     aryan|
+                | 62|kulbhushan|
+                +---+----------+
+        */
+
+
+        df.printSchema();
+
+
+        // Register the DataFrame as a SQL temporary view
+        df.createOrReplaceTempView("people");
+
+
+        /*--------------------------------------------------------------------------------------------------------------------------------------------*/
+        // You can extract a column of a dataframe by its name
+        Dataset<Row> sqlDF = spark.sql("SELECT current_timestamp(),name FROM people where age=30");
+
+       // The columns of a row in the result can be accessed by field index
+        Encoder<String> stringEncoder = Encoders.STRING();
+        Dataset<String> teenagerNamesByIndexDF = sqlDF.map(new MapFunction<Row, String>() {
+            @Override
+            public String call(Row row) throws Exception {
+                return "name: " + row.getString(1);
+            }
+        }, stringEncoder);
+
+
+        System.out.println(" teenagerNamesByIndexDF");
+
+        teenagerNamesByIndexDF.show();
+
+
+
+        /*--------------------------------------------------------------------------------------------------------------------------------------------*/
+
+        /*&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&*/
+        Dataset<Row> sqlDF1 = spark.sql("SELECT max(age), min(age) FROM people");
+
+
+        // Prints value of dataframe
+        sqlDF1.show();
+
+        /*      +--------+--------+
+                |max(age)|min(age)|
+                +--------+--------+
+                |      62|      16|
+                +--------+--------+
+        */
+
+
+        // This doesnt print value of df
+        System.out.println("sqlDF1 " + sqlDF1);   // prints sqlDF1 [max(age): string, min(age): string]
+
+
+        /*&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&*/
+
+
+  /*  UDF POC    */
+
+      //   Writting 1st UDF
+       //  Terminology/fundamental
+        // 1.  dataframe == table;
+        // 2. register dataframe as tempview   --> df.createTempView("employee")
+        // 3. To select columns apply dataframe.sql(select col from employee))
+        // 4. udf called as nameofUdf(column)  in select statement .
+// 5.  The Results of sql queries are dataframes and support all the normal RDD operations .
+
+
+        //  Dataset<Row> df = spark.read().json("examples/src/main/resources/people.json");
+        Dataset<Row> df10 = spark.read().json("/home/osboxes/IntellijProjects/sparkSqlExample/src/resources/people.json");
+
+
+        // Register the DataFrame as a SQL temporary view
+        df10.createOrReplaceTempView("person");
+
+
+
+        spark.udf().register("GettingSurname", new UDF1<String, String>() {
+            @Override
+            public String call(String fullName) throws Exception {
+                String[] strArr = fullName.split(" ");
+
+               return strArr[1];
+            }
+        }, DataTypes.StringType);
+
+
+        Dataset<Row> sqlDF10 = spark.sql("SELECT GettingSurname(name) FROM person ");  // call  udf(column) from tempview  ; createtempview from source dataframe & then pass column of dataframe to udf .
+        sqlDF10.show();
+
+        /*&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&*/
+
+        //-------------------------------------------------------------------------------------------------------//
+      // UDF Example 2 concatinating 2 columns
+
+      // notice UDF2 for new udf
+        spark.udf().register("ConcatedColumns", new UDF2<String, String,String>() {
+            @Override
+            public String call(String column1, String column2) throws Exception {
+                String concatedStr = column1+" * * "+column2;
+
+                return concatedStr;
+            }
+        }, DataTypes.StringType);
+
+
+
+
+        Dataset<Row> sqlDF11 = spark.sql("SELECT ConcatedColumns(name,age) FROM person ");  // call  udf(column) from tempview  ; createtempview from source dataframe & then pass column of dataframe to udf .
+        sqlDF11.show();
+
+        //-------------------------------------------------------------------------------------------------------//
+
+       //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&//
+
+     //   A Dataset is a strongly typed collection of domain-specific objects that can be transformed in parallel using functional or relational operations. Each Dataset also has an untyped view called a DataFrame, which is a Dataset of Row.
+      //in short
+
+       // Operations available on Datasets are divided into transformations and actions. Transformations are the ones that produce new Datasets, and actions
+        // are the ones that trigger computation and return results. Example transformations include map, filter, select, and aggregate (groupBy).
+        // Example actions count, show, or writing data out to file systems.
+        // We Can apply map/flatmap like transformation/action to dataframe  & even after converting it to RDD or from one dataframe to anothore datafgrame .
+long reconrunid=38;
+        List<Long> list=Arrays.asList(reconrunid);
+        Dataset<Long> ds= spark.createDataset(list,Encoders.LONG());
+       // sequence("abc")
+       // ds.withColumnRenamed("value");
+      // Dataset<Row> ds=spark.createDataFrame();
+        System.out.println("empty dataframe");
+        ds.show();
+       Dataset<Row> ds1=ds.withColumn("current_time",functions.lit(1)).withColumnRenamed("value","reconrunid");
+//ds1.withColumnRenamed("current_time","abc");
+        System.out.println("showing ds1 ");
+
+  ds1.show();
+        //sqlDF12.map(e->e.length()).
+        //&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&//
+        spark.stop();
+    }
+
+}
+
+
+
+
