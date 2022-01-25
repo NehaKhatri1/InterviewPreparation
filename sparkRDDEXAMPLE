@@ -1,0 +1,123 @@
+package sparkWordCount;
+
+import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.storage.StorageLevel;
+import scala.collection.JavaConversions;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class sparkRddExamples {
+
+    public static void main(String[] args) {
+
+
+        System.out.println("trying some generic operations on RDD");
+
+
+        SparkConf sparkConf = new SparkConf().setMaster("local").setAppName("Spark code two");
+        JavaSparkContext sparkContext = new JavaSparkContext(sparkConf);
+        sparkContext.setLogLevel("ERROR");
+
+        JavaRDD<String> lines = sparkContext.textFile("/home/osboxes/IntellijProjects/sparkSqlExample/src/resources/textfile.txt");
+        JavaRDD<String> filterLines = lines.filter(e -> !e.contains("not"));
+        filterLines.foreach(e -> System.out.println("filtere " + e));
+
+        // JavaRDD<String> words=
+        filterLines.flatMap(e -> Arrays.asList(e.split(" ")).iterator()).foreach(e -> System.out.println(e));//.count();//flatMap(s -> Arrays.asList(s.split(" ")).iterator());// flatMap(e->e.split(" "))).collect(Collectors);
+        // System.out.println("words "+words);
+        List<String> listOfElementsInEachLine = new ArrayList<>();
+
+        JavaRDD<Object> listOfElementsInEachLine1 = filterLines.map((w) -> {
+            List<String> splittedEachLineInList = Arrays.asList(w.split(" ")).stream().collect(Collectors.toList());
+            System.out.println("splittedEachLineInList.size() " + splittedEachLineInList.size());
+            //listOfElementsInEachLine.add(splittedEachLineInList.size());
+
+            while (splittedEachLineInList.iterator().hasNext()) {
+                listOfElementsInEachLine.add(splittedEachLineInList.stream().iterator().next());
+            }
+            return listOfElementsInEachLine.iterator();
+            //return listOfElementsInEachLine;
+        });
+
+       /* List<String> ls = new LinkedList<>();
+        while (it.hasNext()) {
+            ls.add(it.next().toUpperCase(Locale.ROOT));
+        }
+        return ls.iterator();
+*/
+
+        System.out.println("listOfElementsInEachLine " + listOfElementsInEachLine);
+        // Optional<Integer> maxNoOfElementInALine = listOfElementsInEachLine.stream().sorted().findFirst();
+        //  maxNoOfElementInALine.ifPresent(e -> System.out.println("maxNoOfElementInALine " + maxNoOfElementInALine));
+        //flatMap(s -> Arrays.asList(s.split(" ")).iterator());// flatMap(e->e.split(" "))).collect(Collectors);
+        // System.out.println("words2 "+words2);
+
+
+
+
+         /*   List<Integer> listOfElementsInEachLine3  = (filterLines)>{
+
+                List<String> splittedEachLineInList= Arrays.asList(filterLines.toString().split(" ")).stream().collect(Collectors.toList());
+                System.out.println("splittedEachLineInList.size() "+splittedEachLineInList.size());
+                listOfElementsInEachLine.add(splittedEachLineInList.size());
+
+                return listOfElementsInEachLine;
+
+                );  */
+
+        //    SparkConf sparkconf =new SparkConf();  // step 1
+        //  JavaSparkContext sparkContext= new JavaSparkContext(sparkconf);  //step 2
+        JavaRDD<Integer> javaRdd1 = sparkContext.parallelize(Arrays.asList(1, 2, 3, 4, 5));
+        List<Integer> ListRdd = javaRdd1.coalesce(2).filter(x -> x == 2).collect();
+        System.out.println("ListRdd  " + ListRdd);
+
+        javaRdd1.persist(StorageLevel.MEMORY_AND_DISK());
+        javaRdd1.sample(true, 3, 2);
+
+        System.out.println("javaRdd1  showing ");
+        javaRdd1.foreach(e -> System.out.println(e));
+
+
+        JavaRDD<Integer> javaRdd2 = sparkContext.parallelize(Arrays.asList(3, 4, 5, 6, 7));
+        JavaRDD<Integer> javaRdd3 = javaRdd1.union(javaRdd2);
+        List<Integer> listRdd4 = javaRdd3.distinct().collect();
+        System.out.println("javaRdd3 after union  ");
+
+        listRdd4.stream().sorted().forEach(e -> System.out.println(e));
+
+
+        //javaRdd2.mapPartitions()
+
+        List<Integer> list1 = Arrays.asList(1, 2, 3, 4, 5, 3);
+        // list1.removeIf(x->x==3);
+
+        // foreach loops
+        for (int element : list1) {
+            System.out.println(element);
+        }
+
+
+        Map<String, String> map2 = new HashMap<String, String>();
+        map2.put("11", "neha");
+        map2.put("21", "khatri");
+
+       for( Map.Entry<String,String> map2entryset : map2.entrySet()){
+            String  map2keys=map2entryset.getKey();
+            String  map2values=map2entryset.getValue();
+            System.out.println("map2keys is "+map2keys);
+           System.out.println("map2values is  "+map2values);
+        }
+
+       Set<String>  setOfkeys2 =map2.keySet();
+       Collection<String>  values= map2.values();
+
+
+        System.out.println("setOfkeys2 is  "+setOfkeys2);
+        System.out.println("values is  "+values);
+
+
+    }
+}
